@@ -45,14 +45,13 @@ void doSieve(ST max, void (*action)(ST)){
             ST j_2 = (l*p-5)/2 - (l*p-5)/6;
             // printf(" l_1: %lu  %lu %lu\n", l, l*p, j_2);
             ST diff = j_2 - j;
-            ST k = j_1;
+            ST hdiff = j_1-j;
 
-            while(k < max/3){
+            while(j < max/3-hdiff){
                 // printf("unsetting %lu\n", j);
                 sieve[j / SW] |= ((ST)1 << (j % SW)); 
+                sieve[(j+hdiff) / SW] |= ((ST)1 << ((j+hdiff) % SW)); 
                 j += diff;
-                sieve[k / SW] |= ((ST)1 << (k % SW)); 
-                k += diff;
             }
             if(j < max/3){
                 sieve[j / SW] |= ((ST)1 << (j % SW)); 
