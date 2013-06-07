@@ -57,7 +57,7 @@ void doSieve(ST max, void (*action)(ST)){
             if(j < max/3){
                 sieve[j / SW] |= ((ST)1 << (j % SW)); 
             }
-            if(p % 1000 == 1) printf("%lu\n", p);
+            // if(p % 150000 == 1) printf("%lu\n", p);
         } 
     } 
 }
