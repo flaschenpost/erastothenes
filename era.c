@@ -90,7 +90,7 @@ void main(){
     unsigned long max = 10000000UL;
     // unsigned long max = 214748364UL;
     ERAS_FOREACH_PRIME_TO_N(max*log(max)*log(log(max))
-            , if(PRIME % 100000 == 1) printf("%lu\n", PRIME);
+            , if(PRIME % 10000 == 1) printf("%lu\n", PRIME);
             )
 
 }

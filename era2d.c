@@ -59,7 +59,7 @@ int main(){
     unsigned long max = 10000000UL;
     // unsigned long max = 500UL;
 
-    doSieve(max*log(max)*log(log(max)) + 100, &modPrint);
+    doSieve(max*log(max)*log(log(max)) , &modPrint);
     // check(13);
 
     return 0;
