@@ -14,6 +14,7 @@ void doSieve(ST max, void (*action)(ST)){
     ST *sieve = calloc(((max) / (2 * SW)) + 3, sizeof(ST)); 
 
     ST i;
+    modPrint(3);
     for(i = 0; i < ((max) ) / 3; ++i) 
     { 
         // printf(" i = %lu, p = %lu, %lu \n", i, p, i/SW);
@@ -55,8 +56,7 @@ void doSieve(ST max, void (*action)(ST)){
                     sieve[(j+2*l*p) / SW] |= ((ST)1 << ((j+2*l*p) % SW)); 
                 }
             }
-            if(p % 10000 == 1) printf("%lu\n", p);
-            } 
+            modPrint(p);
         } 
     }
 
