@@ -24,39 +24,28 @@ void doSieve(ST max, void (*action)(ST)){
             if(p > max){
                break;
             }
-            ST l = p;
-            ST j = (l*p-5)/2 - (l*p-5)/6;
+            ST j = (p*p-5)/2 - (p*p-5)/6;
 
-            // printf(" l_0: %lu  %lu %lu / %d\n", l, l*p, j, l%3);
+            // printf(" l_0: %lu  %lu %lu / %lu\n", p, p*p, j, p%3);
+            ST k;
             if(p%3 == 1){
-                l += 4;
+                k = ((p+4)*p-5)/2 - (((p+4)*p-5)/2)/3;
             }
             else{
-                l += 2;
+                k = ((p+2)*p-5)/2 - (((p+2)*p-5)/2)/3;
             }
-            ST j_1 = (l*p-5)/2 - (l*p-5)/6;
-            // printf(" l_1: %lu  %lu %lu / %d\n", l, l*p, j_1, l%3);
-            if(p%3 == 1){
-                l += 2;
-            }
-            else{
-                l += 4;
-            }
-            ST j_2 = (l*p-5)/2 - (l*p-5)/6;
-            // printf(" l_1: %lu  %lu %lu\n", l, l*p, j_2);
-            ST diff = j_2 - j;
-            ST hdiff = j_1-j;
 
-            while(j < max/3-hdiff){
+            while(k < max/3){
                 // printf("unsetting %lu\n", j);
                 sieve[j / SW] |= ((ST)1 << (j % SW)); 
-                sieve[(j+hdiff) / SW] |= ((ST)1 << ((j+hdiff) % SW)); 
-                j += diff;
+                j += 2*p;
+                sieve[k / SW] |= ((ST)1 << (k % SW)); 
+                k += 2*p;
             }
             if(j < max/3){
                 sieve[j / SW] |= ((ST)1 << (j % SW)); 
             }
-            // if(p % 150000 == 1) printf("%lu\n", p);
+            if(p % 10000 == 1) printf("%lu\n", p);
         } 
     } 
 }
@@ -68,7 +57,7 @@ void modPrint(ST p){
 int main(){
     // unsigned long max = 10000000UL;
     unsigned long max = 10000000UL;
-    // unsigned long max = 100UL;
+    // unsigned long max = 500UL;
 
     doSieve(max*log(max)*log(log(max)) + 100, &modPrint);
     // check(13);
