@@ -13,6 +13,7 @@ void doSieve(ST max, void (*action)(ST)){
 
     ST *sieve = calloc(((max) / (2 * SW)) + 3, sizeof(ST)); 
 
+    if(action) action(3);
     ST i;
     for(i = 0; i < ((max) ) / 3; ++i) 
     { 
@@ -45,13 +46,16 @@ void doSieve(ST max, void (*action)(ST)){
             if(j < max/3){
                 sieve[j / SW] |= ((ST)1 << (j % SW)); 
             }
-            if(p % 10000 == 1) printf("%lu\n", p);
+            // if(p % 10000 == 1) printf("%lu\n", p);
+            if(action) action(p);
         } 
     } 
 }
 
 void modPrint(ST p){
-    if(p % 1000 == 1) printf("%lu\n", p);
+    static long anz = 0;
+    anz++;
+    if(anz % 1000 == 7) printf("%lu %lu\n", anz, p);
 }
 
 int main(){
@@ -59,7 +63,8 @@ int main(){
     unsigned long max = 10000000UL;
     // unsigned long max = 500UL;
 
-    doSieve(max*log(max)*log(log(max)) , &modPrint);
+    // doSieve(max*log(max)*log(log(max)) , &modPrint);
+    doSieve((max * log(max) + max * (log(log(max)) - 0.9385)), &modPrint);
     // check(13);
 
     return 0;

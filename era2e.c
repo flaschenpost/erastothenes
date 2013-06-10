@@ -14,8 +14,7 @@ void doSieve(ST max, void (*action)(ST)){
     ST *sieve = calloc(((max) / (2 * SW)) + 3, sizeof(ST)); 
 
     ST i;
-    if(action)
-        action(3);
+    if(action) action(3);
     for(i = 0; i < ((max) ) / 3; ++i) 
     { 
         // printf(" i = %lu, p = %lu, %lu \n", i, p, i/SW);
@@ -46,19 +45,18 @@ void doSieve(ST max, void (*action)(ST)){
                 }
                 ST l=0;
 
-                for(l=0; l < (max/3-k)/(2*p); l++){
+                for(l=0; l <= (max/3-k)/(2*p); l++){
                     // printf("p %lu unsetting %lu %lu,  / %lu / %lu\n", p, j+2*l*p, k+2*l*p, max/3, k);
                     sieve[(j+2*l*p) / SW] |= ((ST)1 << ((j+2*l*p) % SW)); 
                     sieve[(k+2*l*p) / SW] |= ((ST)1 << ((k+2*l*p) % SW)); 
                     // printf(" k = %lu 2pl+k = %lu max/3 = %lu max/3-k = %lu \n", k, 2*p*l + k, max/3, max/3-k);
                 }
                 
-                if(j + 2*l+p < max/3){
+                if(j + 2*l+p <= max/3){
                     sieve[(j+2*l*p) / SW] |= ((ST)1 << ((j+2*l*p) % SW)); 
                 }
             }
-            if(action)
-                action(p);
+            if(action) action(p);
         } 
     }
 }
@@ -66,12 +64,12 @@ void doSieve(ST max, void (*action)(ST)){
     void modPrint(ST p){
         static long anz = 0;
         anz++;
-        if(p % 1 == 0) printf("%lu %lu\n", anz, p);
+        if(anz % 1000 == 7) printf("%lu %lu\n", anz, p);
     }
 
 int main(){
     // unsigned long max = 10000000UL;
-    unsigned long max = 100000UL;
+    unsigned long max = 10000000UL;
     // unsigned long max = 500UL;
 
     // doSieve(max*log(max)*log(log(max)) , &modPrint);
