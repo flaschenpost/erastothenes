@@ -1,0 +1,1 @@
+g++ ocl.cpp -I/usr/lib64/OpenCL/vendors/intel/include/ -L/usr/lib64/OpenCL/vendors/intel -lOpenCL
