@@ -10,21 +10,35 @@
 #include <stdio.h>
 #include <string.h>
 
-#define ST int
+#define ST unsigned int
 #define SW sizeof(ST)*8
+
+// per thread, so only small part of the card-memory, in Bytes
+#define CUDABLOCK 512*1024
+#define FIRSTPRIMES 9
 
 // Variables
 ST * isComposite;
 ST * d_isComposite;
-int initPrimes[9] = {5,7,11,13,17,19,23,29,31};
+int initPrimes[FIRSTPRIMES] = {5,7,11,13,17,19,23,29,31};
 
 void Cleanup(bool);
 
 // Device code
-__global__ void initPrim(ST * C, const int initPrimes[], int N)
+__global__ void initPrim(ST * C, const int offset, const int initPrimes[], int N)
 {
-    int i = blockDim.x * blockIdx.x + threadIdx.x;
-    for(int j = 0; j<24; j++){
+    int i = offset + blockDim.x * blockIdx.x + threadIdx.x;
+    long block = CUDABLOCK * sizeof(int);
+    for (int p = 0; p < FIRSTPRIMES; p++){
+        unsigned int j ;
+        if(i == 0){
+            j = (p*p-5)/2 - (p*p-5)/6;
+        }
+        else{
+            j = p - (i % p);
+        }
+
+    for(int j = 0; j<block; j++){
         if(24*i+j < N){
             C[24*i+j] = 24*i+j - i;
         }
