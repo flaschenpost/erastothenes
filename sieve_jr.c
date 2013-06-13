@@ -5,8 +5,7 @@
 /* main loop to start TheJokers prime generator
  */
 int main(){
-    ST max = 100000UL;
-    // sieve(max * log(max) + max * (log(log(max)) - 0.9385));
+    ST max = 1000000UL;
     sieve(max);
     return 0;
 }
