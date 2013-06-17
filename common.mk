@@ -50,7 +50,7 @@ ROOTDIR    ?= /opt/NVIDIA_GPU_Computing_SDK/C/src
 ROOTBINDIR ?= $(ROOTDIR)/../bin
 BINDIR     ?= .
 ROOTOBJDIR ?= obj
-LIBDIR     := $(ROOTDIR)/../lib
+LIBDIR     := /opt/NVIDIA_GPU_Computing_SDK/C/lib
 COMMONDIR  := $(ROOTDIR)/../common
 
 # Compilers
@@ -87,7 +87,7 @@ CWARN_FLAGS := $(CXXWARN_FLAGS) \
 
 # architecture flag for nvcc and gcc compilers build
 CUBIN_ARCH_FLAG :=
-CXX_ARCH_FLAGS  :=
+CXX_ARCH_FLAGS  := -march=native
 NVCCFLAGS       :=
 LIB_ARCH        := $(OSARCH)
 

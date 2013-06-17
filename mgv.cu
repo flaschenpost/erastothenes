@@ -5,98 +5,20 @@
 #define ST unsigned int
 #define SW (sizeof(ST)*8)
 
-#define PRT unsigned long
+#define PRT unsigned short
 
 // per thread, so only small part of the card-memory, in Bytes
-#define CUDABLOCK 1024
+#define CUDABLOCK 512
 // #define FIRSTPRIMES 9
 #define FIRSTPRIMES 16
 
 // Variables
 ST * isComposite;
-ST * d_isComposite;
+__shared__ ST * d_isComposite;
 
 void Cleanup(bool);
 PRT initPrimes[FIRSTPRIMES] = {5,7,11,13,17,19,23,29,31,37,41,43,47,53,59,61};
 
-// fake code
-void initPrimF(int blockD, int blockI, int threadI, ST * C, const int offset, unsigned long N)
-{
-    unsigned long i = blockD * blockI + threadI;
-    PRT d_initPrimes[FIRSTPRIMES] = {5,7,11,13,17,19,23,29,31,37,41,43,47,53,59,61};
-    // bits
-    unsigned long block = CUDABLOCK * SW;
-
-    unsigned long base = block*i + offset ;
-    unsigned long max = base + block;
-
-    for(int l = 0; l < FIRSTPRIMES; l++){
-        PRT p = d_initPrimes[l];
-        // unsigned long back = base % (2*p);
-        unsigned long j,k;
-        j = (p*p-5)/2 - (p*p-5)/6 ;
-        if(p%3 == 1){
-            k = ((p+4)*p-5)/2 - (((p+4)*p-5)/2)/3;
-        }
-        else{
-            k = ((p+2)*p-5)/2 - (((p+2)*p-5)/2)/3;
-        }
-
-        if(base > 0){
-            j = base + j % (2*p) - base % (2*p);
-            k = base + k % (2*p) - base % (2*p);
-            if(j < base){
-                j += 2*p;
-            }
-            if(k < base){
-                k += 2*p;
-            }
-        }
-        printf("base = %d, j = %d, k = %d \n", base, j, k);
-
-        /*
-        if(p == 11){
-            C[5*i+0] = base;
-            C[5*i+1] = p;
-            C[5*i+2] = max;
-            C[5*i+3] = j;
-            C[5*i+4] = k;
-            return;
-        }
-         // */
-        if(j < base){
-            j += 2*p;
-            C[k / SW] |= ((ST)1 << ((k) % SW)); 
-            k += 2*p;
-        }
-        if(k < j){
-            unsigned long tmp = j;
-            j = k;
-            k = tmp;
-        }
-        printf("base = %d, j = %d, k = %d , max = %lu\n", base, j, k, max);
-
-        if(max > N){
-            max = N;
-        }
-
-        while(j <= max - 2*p){
-            C[j / SW] |= ((ST)1 << ((j) % SW)); 
-            C[k / SW] |= ((ST)1 << ((k) % SW)); 
-            printf("%d unsetting %d , %d / %d\n", p, j, k, max);
-            j += 2*p;
-            k += 2*p;
-        }
-        if(j < max){
-            C[j / SW] |= ((ST)1 << ((j) % SW)); 
-            printf("%d unsetting %d  / %d\n", p, j, max);
-        }
-        if(k < max){
-            C[k / SW] |= ((ST)1 << ((k) % SW)); 
-            printf("%d unsetting %d  / %d\n", p, k, max);
-        }
-    }
-}
 // Device code
 __global__ void initPrim(ST * C, const int offset, unsigned long N)
 {
@@ -174,7 +96,7 @@ __global__ void initPrim(ST * C, const int offset, unsigned long N)
 // Host code
 int main(int argc, char** argv)
 {
-    int threadsPerBlock = 32;
+    int threadsPerBlock = 64;
     int blocksPerGrid=1;
 
     printf("Memory preset \n");
@@ -227,9 +149,12 @@ int main(int argc, char** argv)
         Cleanup(false);
     }
     // */
+    // check(max, isComposite);
 
-    //*
-    for (i = 0; i < max; ++i) {
+    Cleanup(true);
+}
+void check(long max, ST *isComposite){
+    for (long i = 0; i < max; ++i) {
         unsigned long long p = i;
         p += i/2; p<<=1; p += 5;
         int p_is_comp = 0, p_is_marked = 0;
@@ -263,7 +188,6 @@ int main(int argc, char** argv)
             exit(1);
         }
     }
-    Cleanup(true);
 }
 
 void Cleanup(bool noError)
