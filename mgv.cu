@@ -2,20 +2,19 @@
 #include <stdio.h>
 #include <string.h>
 
-#define ST unsigned int
+#define ST uint8
 #define SW (sizeof(ST)*8)
 
 #define PRT unsigned short
 
 // per thread, so only small part of the card-memory, in Bytes
-#define CUDABLOCK 4
-
+#define CUDABLOCK 2048
 // #define FIRSTPRIMES 9
 #define FIRSTPRIMES 16
 
 // Variables
 ST * isComposite;
-ST * d_isComposite;
+__device__ ST * d_isComposite;
 
 void Cleanup(bool);
 PRT initPrimes[FIRSTPRIMES] = {5,7,11,13,17,19,23,29,31,37,41,43,47,53,59,61};
@@ -41,7 +40,6 @@ __global__ void initPrim(ST * C, const int offset, unsigned long N)
         else{
             k = ((p+2)*p-5)/2 - (((p+2)*p-5)/2)/3;
         }
-        unsigned long diff = k-j;
 
         if(base > 0){
             j = base + j % (2*p) - base % (2*p);
@@ -84,13 +82,13 @@ __global__ void initPrim(ST * C, const int offset, unsigned long N)
 // Host code
 int main(int argc, char** argv)
 {
-    int threadsPerBlock = 64;
+    int threadsPerBlock = 128;
     int blocksPerGrid=1;
 
-    int loops = 5;
+    int loops = 4;
 
-    printf("Memory preset \n");
-    size_t size_bytes = blocksPerGrid * threadsPerBlock* CUDABLOCK*sizeof(ST); 
+    size_t size_ST = blocksPerGrid * threadsPerBlock* CUDABLOCK;
+    size_t size_bytes = size_ST * sizeof(ST); 
 
     // Bits
     unsigned long max = size_bytes*8;
@@ -100,10 +98,11 @@ int main(int argc, char** argv)
     // Allocate input vectors h_A and h_B in host memory
     isComposite = (ST*)malloc(loops*size_bytes*sizeof(ST));
     if (isComposite == 0) Cleanup(false);
+    printf("Memory preset %lu bits\n", loops*size_bytes*sizeof(ST)*8);
 
     unsigned long i;
 
-    printf("Setting %i bytes\n", size_bytes);
+    // printf("Setting %i bytes\n", size_bytes);
     // Allocate vectors in device memory
     error = cudaMalloc((void**)&d_isComposite, size_bytes*sizeof(ST));
     if (error != cudaSuccess){
@@ -112,7 +111,7 @@ int main(int argc, char** argv)
     }
 
     for(int lp = 0; lp < loops; lp++){
-        printf("init at %lu  %lu %l bytes to 0\n", d_isComposite, max, isComposite);
+        printf("lp %d: init at %lu  %lu %l bytes to 0\n", lp, d_isComposite, max, isComposite);
         cudaMemset(d_isComposite, 0, size_bytes);
         if (error != cudaSuccess) Cleanup(false);
 
@@ -129,21 +128,21 @@ int main(int argc, char** argv)
             printf("sync error = %d / %d : %dx%d / %d\n", error, cudaSuccess, blocksPerGrid, threadsPerBlock);
             Cleanup(false);
         }
-        error = cudaMemcpy(isComposite+lp*size_bytes, d_isComposite, size_bytes, cudaMemcpyDeviceToHost);
+        error = cudaMemcpy(isComposite+lp*size_ST, d_isComposite, size_bytes, cudaMemcpyDeviceToHost);
         if (error != cudaSuccess){
             printf("2. error = %d / %d\n", error, cudaSuccess);
             Cleanup(false);
         }
-        printf("%lu %lu %lu %lu \n", isComposite[lp*size_bytes], isComposite[lp*size_bytes+1], isComposite[lp*size_bytes+2], isComposite[lp*size_bytes+3]);
+        // printf("%lu %lu %lu %lu \n", isComposite[lp*size_bytes], isComposite[lp*size_bytes+1], isComposite[lp*size_bytes+2], isComposite[lp*size_bytes+3]);
     }
 
     //*
-    for (i = 0; i < loops*max; ++i) {
+    for (i = 0; i < 0*loops*max; ++i) {
         unsigned long long p = i;
         p += i/2; p<<=1; p += 5;
         int p_is_comp = 0, p_is_marked = 0;
 
-        //*
+        /*
         if(isComposite[i/SW] & (1UL << (i%SW))){
             printf("%4d %6d _1\n", i, 5+2*(i+i/2));
         }
@@ -160,7 +159,7 @@ int main(int argc, char** argv)
         p_is_marked = isComposite[i/SW] & (1UL << (i%SW));
         if( p_is_comp && ! p_is_marked){
             printf(" %lu: %llu comp %llu but unmarked \n", i, p, p_is_comp);
-            exit(1);
+            Cleanup(1);
         }
         if( !p_is_comp && p_is_marked){
             printf(" %lu: %llu not comp %llu but marked \n", i, p, p_is_comp);

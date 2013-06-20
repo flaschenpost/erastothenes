@@ -2,17 +2,17 @@
 #include <stdio.h>
 #include <string.h>
 
-#define ST unsigned short int
+#define ST unsigned long int
 #define SW (sizeof(ST)*8)
 
 #define PRT unsigned short
 
 // per thread, so only small part of the card-memory, in Bytes
-#define CUDABLOCK 8
+#define CUDABLOCK 2048
 // #define FIRSTPRIMES 9
 #define FIRSTPRIMES 16
 
-#define LOGP 5
+#define LOGP 4
 // Variables
 ST * isComposite;
 ST * d_isComposite;
@@ -22,17 +22,17 @@ int true = 1;
 void Cleanup(bool);
 PRT initPrimes[FIRSTPRIMES] = {5,7,11,13,17,19,23,29,31,37,41,43,47,53,59,61};
 
-void dumpBits(ST *isComposite, int loops, int max){
+void dumpBits(ST *isC, int loops, int max, char *tg){
     for (int i = 0; i < loops*max; ++i) {
         unsigned long long p = i;
         p += i/2; p<<=1; p += 5;
 
         //*
-        if(isComposite[i/SW] & (1UL << (i%SW))){
-            printf("%4d %6d _1\n", i, p);
+        if(isC[i/SW] & (1UL << (i%SW))){
+            printf("%4d %6d _1 %d %s\n", i, p, i/SW, tg);
         }
         else{
-            printf("%4d %6d _0\n", i, p);
+            printf("%4d %6d _0 %d %s\n", i, p, i/SW, tg);
         }
     }
 }
@@ -112,12 +112,11 @@ void initPrim(int blockDim, int blockIdx, int threadIdx, ST * C, const int offse
 // Host code
 int main(int argc, char** argv)
 {
-    int threadsPerBlock = 64;
+    int threadsPerBlock = 128;
     int blocksPerGrid=1;
 
     int loops = 64;
 
-    printf("Memory preset \n");
     size_t size_ST = blocksPerGrid * threadsPerBlock* CUDABLOCK;
     size_t size_bytes = size_ST * sizeof(ST); 
 
@@ -127,6 +126,8 @@ int main(int argc, char** argv)
     // Allocate input vectors h_A and h_B in host memory
     isComposite = (ST*)malloc(loops*size_bytes*sizeof(ST));
     if (isComposite == 0) Cleanup(false);
+ 
+    printf("Memory preset %lu bits\n", loops*size_bytes*sizeof(ST)*8);
 
     // Allocate input vectors h_A and h_B in host memory
     d_isComposite = (ST*)malloc(size_bytes*sizeof(ST));
@@ -135,6 +136,8 @@ int main(int argc, char** argv)
     printf("pointers %p  %p  %p \n", isComposite, d_isComposite, isComposite + loops*size_bytes*sizeof(ST));
     unsigned long i;
 
+    memset(isComposite, 0, loops*sizeof(ST)*size_bytes);
+
     printf("Setting %i bytes\n", size_bytes);
     for(int lp = 0; lp < loops; lp++){
         printf("init at %lu  %lu %l bytes to 0\n", d_isComposite, max, isComposite);
@@ -142,23 +145,28 @@ int main(int argc, char** argv)
 
         // Invoke kernel
 
-        for(int thr = 0; thr < 64; thr++){
+        for(int thr = 0; thr < threadsPerBlock; thr++){
             initPrim(0, 0, thr, d_isComposite, lp*max, max);
+            // dumpBits(isComposite, 1, 1000, "inside loop ");
+            // dumpBits(isComposite, lp, 5000, "isC");
+            // dumpBits(d_isComposite, lp, 5000, "d_isC");
         }
-        memcpy(isComposite+lp*size_ST, d_isComposite, size_ST);
-        dumpBits(isComposite, lp, max);
+        // printf("after thr loop: %p  %p %d %d\n", isComposite, d_isComposite, lp, size_ST);
+        // dumpBits(isComposite, lp+1, 10000, "before copy");
+        memcpy(isComposite+lp*size_ST, d_isComposite, size_bytes);
+        // dumpBits(isComposite, lp+1, 10000, "after copy");
     }
 
     // Copy result from device memory to host memory
     // */
 
     //*
-    for (i = 0; i < loops*max; ++i) {
+    for (i = 0; i < 0*loops*max; ++i) {
         unsigned long long p = i;
         p += i/2; p<<=1; p += 5;
         int p_is_comp = 0, p_is_marked = 0;
 
-        //*
+        /*
         if(isComposite[i/SW] & (1UL << (i%SW))){
             printf("%4d %6d _1\n", i, 5+2*(i+i/2));
         }
