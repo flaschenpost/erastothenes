@@ -62,7 +62,9 @@ void doSieve(ST max, void (*action)(ST)){
 }
 
     void modPrint(ST p){
-        if(p % 1000 == 1) printf("%lu \n",p);
+        static long anz = 0;
+        anz++;
+        if(anz % 1000 == 7) printf("%lu %lu\n", anz, p);
         /*
         static long anz = 0;
         anz++;
@@ -72,7 +74,7 @@ void doSieve(ST max, void (*action)(ST)){
 
 int main(){
     // unsigned long max = 10000000UL;
-    unsigned long max = 1000000UL;
+    unsigned long max = 10000000UL;
     // unsigned long max = 500UL;
 
     // doSieve(max*log(max)*log(log(max)) , &modPrint);

@@ -1,41 +1,59 @@
-
-#pragma once
-
-#include <stdlib.h>
-#include <math.h>
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <math.h>
 
-#define ST unsigned long
-#define SW (sizeof(ST) * 8)
+#define SL unsigned long long
 
-void doSieve(ST n, void (*action)(ST)){
-    ST *sieve = calloc(((n) / (2 * SW)) + 1, sizeof(ST)); 
-    unsigned long i; 
-    for(i = 0; i < (n - 3) / 2; ++i) 
+#define ST unsigned long long
+#define SW (sizeof(ST) * 8) 
+
+void doSieve(SL max, void (*action)(SL)){
+
+    ST *sieve = calloc(((max) / (2 * SW)) + 3, sizeof(ST)); 
+    SL i;
+    SL kStart = 0;
+    for(i = 0; i < ((max) ) / 3; ++i) 
     { 
+        // printf(" i = %lu, p = %lu, %lu \n", i, p, i/SW);
         if(!(sieve[i / SW] & ((ST)1 << (i % SW)))) 
         { 
-            unsigned long j; 
-            for(j = 3*i+3; j < ((n) - 3) / 2; j += i * 2 + 3) 
+            SL p = 5 + 2*(i + i/2);
+            kStart += 2*p;
+
+            if(p > max){
+               break;
+            }
+            SL j = (p*p-5)/2 - (p*p-5)/6;
+            SL k = kStart;
+
+            while(k < max/3){
                 sieve[j / SW] |= ((ST)1 << (j % SW)); 
-            if(action){
-                unsigned long prime = i * 2 + 3; 
-                action(prime);
+                j += 2*p;
+                sieve[k / SW] |= ((ST)1 << (k % SW)); 
+                k += 2*p;
+            }
+            if(j < max/3){
+                sieve[j / SW] |= ((ST)1 << (j % SW)); 
             }
         } 
     } 
-    free(sieve);
 }
 
-void  firePrime(ST p){
-    if(p % 100000 == 1) printf("%lu\n", p);
+void modPrint(SL p){
+    static long anz = 0;
+    anz++;
+    if(anz % 1000 == 7) printf("%lu %llu\n", anz, p);
 }
 
-void main(){
-    // unsigned long long max = 2147483648ULL;
-    // unsigned long max = 21474836UL;
-    unsigned long max = 10000000UL;
-    // unsigned long max = 214748364UL;
-    doSieve(max*log(max)*log(log(max)), &firePrime);
+int main(){
+    // unsigned long max = 10000000UL;
+    SL max = 10000000UL;
+    // unsigned long max = 500UL;
 
+    // doSieve(max*log(max)*log(log(max)) , &modPrint);
+    doSieve((max * log(max) + max * (log(log(max)) - 0.9385)), &modPrint);
+    // check(13);
+
+    return 0;
 }
