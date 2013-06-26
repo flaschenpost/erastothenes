@@ -30,19 +30,24 @@ main(void)
     std::cerr << "Platform number is: " << platformList.size() << std::endl;std::string platformVendor;
     platformList[0].getInfo((cl_platform_info)CL_PLATFORM_VENDOR, &platformVendor);
     std::cerr << "Platform is by: " << platformVendor << "\n";
-    /*
+
     cl_context_properties cprops[3] =
-    {CL_CONTEXT_PLATFORM, (cl_context_properties)(platformList[0])(), 0};cl::Context context(
+    {CL_CONTEXT_PLATFORM, (cl_context_properties)(platformList[0])(), 0};
+    cl::Context context(
             CL_DEVICE_TYPE_CPU,
             cprops,
             NULL,
             NULL,
             &err);
-    checkErr(err, "Conext::Context()"); 
+    checkErr(err, "Context::Context()"); 
     cl::vector<cl::Device> devices;
     devices = context.getInfo<CL_CONTEXT_DEVICES>();
     checkErr(
             devices.size() > 0 ? CL_SUCCESS : -1, "devices.size() > 0");
-    std::cout << devices.size();
-*/
+    std::cout << devices.size() << "\n";
+
+    long *host = new long[1024];
+    cl::Buffer memCL(context, CL_MEM_WRITE_ONLY | CL_MEM_USE_HOST_PTR, 1024, host, &err);
+    checkErr(err, "Buffer::Buffer()");
+
 }
