@@ -54,9 +54,8 @@ void doSieve(SL max, void (*action)(SL)){
     }
     memset(sieve, 0, (((max) / (2 * SW)) + 3));
     */
-    // if(action) action(3);
-    // if(action) action(5);
-    // if(action) action(7);
+    if(action) action(2);
+    if(action) action(3);
     SL i;
     for(i = 0; i < max / 3; ++i) 
     { 
@@ -68,6 +67,7 @@ void doSieve(SL max, void (*action)(SL)){
             if(p > max){
                break;
             }
+            if(action) action(p);
             SL j = (p*p-5)/2 - (p*p-5)/6;
 
             // printf(" l_0: %lu  %lu %lu / %lu\n", p, p*p, j, p%3);
@@ -89,7 +89,6 @@ void doSieve(SL max, void (*action)(SL)){
                 sieve[j / SW] |= ((ST)1 << (j % SW)); 
             }
             // if(p % 10000 == 1) printf("%lu\n", p);
-            // if(action) action(p);
         } 
     } 
 }
@@ -102,11 +101,12 @@ void modPrint(SL p){
 
 int main(){
     // unsigned long max = 10000000UL;
-    SL max = 10000000UL;
+    SL max = 800000000UL;
     // unsigned long max = 500UL;
 
     // doSieve(max*log(max)*log(log(max)) , &modPrint);
-    doSieve((max * log(max) + max * (log(log(max)) - 0.9385)), &modPrint);
+    // doSieve((max * log(max) + max * (log(log(max)) - 0.9385)), &modPrint);
+    doSieve(max, &modPrint);
     // check(13);
 
     return 0;
