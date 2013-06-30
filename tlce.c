@@ -9,9 +9,10 @@
 
 #define DO2(JOB) JOB JOB
 #define DO8(JOB) DO2(JOB) DO2(JOB) DO2(JOB) DO2(JOB) 
+#define DO64(JOB) DO8(DO8(JOB)) 
 #define DO128(JOB) DO8(DO8(JOB)) DO8(DO8(JOB))
 
-SL max = 1ULL<<31;
+SL max = 1ULL<<30;
 int p;
 // SL max = 900LL;
 SL j;
@@ -61,9 +62,9 @@ void doWork(ST *C, SL j, SL k, SL limit, SL p){
     }
 
     pos = p;
-    for(unsigned long i=0; i<=limit/SW/256; i++){
+    for(unsigned long i=0; i<=limit/SW/128; i++){
         int l = 0;
-        DO128(C[pos++] |= predef[l++];)
+        DO64(C[pos++] |= predef[l++];)
 
     }
 }

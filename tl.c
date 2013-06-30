@@ -35,6 +35,7 @@ void doWork(ST *C, SL j, SL k, SL limit, SL p){
 
     // first pattern extra
 
+    __asm("# prepare patterns");
     while(k < (p+1)*SW){
         C[j / SW] |= ((ST)1 << (j % SW)); 
         predef[j / SW] |= ((ST)1 << (j % SW)); 
@@ -52,12 +53,13 @@ void doWork(ST *C, SL j, SL k, SL limit, SL p){
     predef[0] = predef[p];
 
     ST top = limit/2/SW;
+    __asm("# main loop");
     for(pos=p; pos < top; pos++){
         // printf("pos predef %llu %llu \n", pos, predef[(pos-1)%p]);
-        C[pos] = predef[pos%p];
+        C[pos] |= predef[pos%p];
         pos++;
     }
-
+    __asm("# end of main loop");
 }
 
 int main(){

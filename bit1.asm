@@ -8,6 +8,7 @@ stdout    equ 1
 SYS_EXIT  equ 1
 SYS_WRITE equ 4
 
+
     .data
 string  db 10,"Hello, world!",10
 len dd $ - string
@@ -70,50 +71,55 @@ _start:
     loop init_bits
 
     mov rdi, nonprim
-    mov rcx, 1
-    shl rcx,27
 
-    sub rcx, 1
+    mov rsi, nonprim
+    add rsi, 8
 
+    mov r9, nonprim
+    add r9, 16
+
+    mov r10, nonprim
+    add r10, 24
+
+    mov ecx, 1
+    shl ecx, 25
+    sub ecx,1
+  
     zero_bits:
-    movdqu [rdi],xmm0
-    add rdi, 8
+        movdqu [rsi],xmm0
+        add rsi, 32
+        movdqu [rdi],xmm0
+        add rdi, 32
+        movdqu [r9],xmm0
+        add r9, 32
+        movdqu [r10],xmm0
+        add r10, 32
     loop zero_bits
 
-    call write 
+    ; call write 
 
-    mov rbx, 0
-    mov rax, SYS_EXIT
-    int 80h
-
-    mov r9, 0  ; j % 64
+    mov r9, 0  ; j
     mov r10, 0 ; j / 64
+    mov r11, 0 ; j % 64
+    mov r12, 0 ; work
 
-    mov r11, 0 ; working var
-
+    ; 2^30 bits / 10 bit per instruction
     mov rcx, 1
-    shl rcx,10
-    mov rdi, nonprim
+    shl rcx,27
+    sub rcx,1
 
-    mov [nonprim], rcx
-    mov rcx, offset outbuf
-    mov rdx, 65*200
-    mov rbx, stdout
-    mov rax, SYS_WRITE
-    int 80h
+    mov rdi, nonprim
+    mov [rdi],0
 
     set_bits:
-        lea rsi, [offset bits + 8*r9]
-        mov r11, [rsi]
-        or  [rdi], r11 
-
-        add r9,10 
-
+        mov r10, r9;
+        shr r10, 6
         mov r11, r9
-        shr r11, 6 ; /64
-        shl r11, 3 ; *8
-        add rdi, r11
-        and r9, 63
+        and r11, 63
+        mov r12, bits[r11]
+
+        or nonprim[r10], r12
+
     loop set_bits
 
 
