@@ -53,11 +53,19 @@ write proc
     pop rcx
     loop lineloop
 
+    mov byte ptr [r15], 10
+
     mov rcx, offset outbuf
-    mov rdx, 69*20
-    mov rbx, stdout
+    mov rdx, 73*20+1
+    mov rbx, 1
     mov rax, 4
     int 80h
+
+    ; mov rax, 1
+    ; mov rdi, 1
+    ; mov rsi, offset outbuf
+    ; mov rdx, 70*20
+    ; syscall
 
     
     pop rcx
