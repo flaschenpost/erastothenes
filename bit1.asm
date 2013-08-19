@@ -19,7 +19,7 @@ tmp dq 0
 
  .data?
 bits     dq 128 DUP(?)
-outbuf   dq 1024 DUP(?)
+outbuf   dq 512*1024 DUP(?)
 shift5   dq 64  DUP(?)
 shift7   dq 64  DUP(?)
 shift11  dq 64  DUP(?)
@@ -41,11 +41,19 @@ _start:
     mov rbx, 1
     shl rbx, 30
     add rbx, rax
+    add rdi, 2048
+    add rdi, rax
 
     mov tmp, rbx
 
     mov rax, 45
     int 80h
+
+    mov rax, nonprim
+    add rax, 0ffh
+    and rax, -100h
+
+    mov nonprim, rax
 
     xorps xmm0, xmm0
     xorps xmm1, xmm1
@@ -64,8 +72,8 @@ _start:
 
     init_bits:
 
-    mov [RDI], r9
-    add RDI,8
+    mov [rdi], r9
+    add rdi,8
     shl r9,1
 
     loop init_bits
@@ -73,27 +81,27 @@ _start:
     mov rdi, nonprim
 
     mov rsi, nonprim
-    add rsi, 8
+    add rsi, 16
 
     mov r9, nonprim
-    add r9, 16
+    add r9, 32
 
     mov r10, nonprim
-    add r10, 24
+    add r10, 48
 
     mov ecx, 1
-    shl ecx, 25
+    shl ecx, 22
     sub ecx,1
   
     zero_bits:
-        movdqu [rsi],xmm0
-        add rsi, 32
-        movdqu [rdi],xmm0
-        add rdi, 32
-        movdqu [r9],xmm0
-        add r9, 32
-        movdqu [r10],xmm0
-        add r10, 32
+        movaps [rsi],xmm0
+        add rsi, 64
+        movdqa [rdi],xmm0
+        add rdi, 64
+        movaps [r9],xmm0
+        add r9, 64
+        movdqa [r10],xmm0
+        add r10, 64
     loop zero_bits
 
     ; call write 
@@ -104,21 +112,36 @@ _start:
     mov r12, 0 ; work
 
     ; 2^30 bits / 10 bit per instruction
-    mov rcx, 1
-    shl rcx,27
-    sub rcx,1
+    mov edx,0
 
+    mov rax, 1
+    shl rax, 33
+    sub rax, 1
+
+    mov r9, 10
+
+    div r9
+
+    mov rcx, rax
+
+    mov r9, 0
+    mov r10, 0
     mov rdi, nonprim
-    mov [rdi],0
 
     set_bits:
-        mov r10, r9;
-        shr r10, 6
-        mov r11, r9
-        and r11, 63
-        mov r12, bits[r11]
 
-        or nonprim[r10], r12
+        mov rsi, r9
+        shr rsi, 3
+        and rsi, -8
+        add rdi, rsi
+
+        and r9, 63
+
+        lea rsi, [bits + 8*r9]
+        mov r10, [rsi]
+
+        or [rdi], r10
+        add r9,10
 
     loop set_bits
 
