@@ -13,18 +13,16 @@ write proc
     mov r15, offset outbuf
     
     ; just a few lines
-    mov rcx, 20
+    mov rcx, 10
 
     lineloop:
     push rcx
     mov rcx, 64
+    xor r14, r14
+    bts r14, 63
 
     bitloop:
 
-    mov r14,1
-    shl r14,cl
-    shr r14,1
-    
     test rcx,7
     jnz writenospace
     mov byte ptr [r15], ' '
@@ -36,12 +34,14 @@ write proc
 
     mov byte ptr [r15], 'x'
     add r15, 1
+    shr r14,1
     loop bitloop
     jmp endloop
 
     bitzero:
     mov byte ptr [r15], '.'
     add r15,1
+    shr r14,1
     loop bitloop
 
     endloop:
@@ -56,7 +56,7 @@ write proc
     mov byte ptr [r15], 10
 
     mov rcx, offset outbuf
-    mov rdx, 73*20+1
+    mov rdx, 73*10+1
     mov rbx, 1
     mov rax, 4
     int 80h
@@ -64,7 +64,7 @@ write proc
     ; mov rax, 1
     ; mov rdi, 1
     ; mov rsi, offset outbuf
-    ; mov rdx, 70*20
+    ; mov rdx, 70*10
     ; syscall
 
     
