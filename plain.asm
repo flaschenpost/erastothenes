@@ -7,10 +7,12 @@ include write.inc
 stdout    equ 1
 SYS_EXIT  equ 1
 SYS_WRITE equ 4
+POT2      equ 28
 
 
     .data
-fmthex db 10, "%x "
+fmthex db 10, "hello %x ", 10, 0
+fmthex_length db $-fmthex
 nonprim dq 0
 endmem dq 0
 tmp dq 0
@@ -26,11 +28,13 @@ bits     dq 128 DUP(?)
 
     .code
 
+    EXTRN printf:NEAR
+
     breakme proc
     ret
     breakme endp
 
-_start:
+main:
 
     ; alloc mem
     mov rax, 45
@@ -40,7 +44,7 @@ _start:
     mov nonprim, rax
 
     mov rbx, 1
-    shl rbx, 27
+    shl rbx, POT2-3
     add rbx, rax
 
     add r8, r9
@@ -49,6 +53,7 @@ _start:
 
     mov rax, 45
     int 80h
+    sub rax, 8
     mov endmem, rax
 
 
@@ -71,6 +76,9 @@ _start:
 
     add r10, nonprim
 
+    cmp r10, endmem
+    jge outer_break
+
     ; extract byte- and bit-number
     bt [r10], ax
     jc outer_loop
@@ -79,15 +87,18 @@ _start:
 
     ; here is r8 a prime bit
     ; and r9 is the prime number itself
-    mov r9,r8
-    shl r9,1
-    add r9,3
+    shl r8,1
+    add r8,3
+
+    mov rax, r8
+    imul rax, rax
+
 
     mov rcx, endmem
-    sub rcx, nonprim
+    sub rcx, r10
     sub rcx,1
     inner_loop:
-        add rax, r9
+        add rax, r8
         mov rbx, rax
         shr rbx, 3
         and rbx, -8
@@ -100,13 +111,14 @@ _start:
     jmp inner_loop
 
     inner_break:
-    call write
+    ; call write
 
     pop r8
-    cmp r8, 10
-    jl outer_loop
+    jmp outer_loop
 
-    ; call write 
+    outer_break:
+
+    call write 
 
     ; mov rax, nonprim
     ; mov [rax], r8
@@ -124,5 +136,5 @@ _start:
     mov rbx, 0
     mov rax, SYS_EXIT
     int 80h
-    end _start
+    end main
 
