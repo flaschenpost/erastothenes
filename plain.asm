@@ -26,7 +26,7 @@ breakme proc
 ret
 breakme endp
 
-_start:
+main:
 
     ; alloc mem
     mov rax, SYS_BRK
@@ -38,14 +38,13 @@ _start:
     mov rdi, 1
     shl rdi, pot2 - 3
     add rdi, rax
-    ; add rdi, 16
-
-    add r8, r9
+    add rdi, 16
 
     mov tmp, rbx
 
     mov rax, SYS_BRK
     syscall
+    sub rax, 16
     mov endmem, rax
 
 
@@ -79,15 +78,14 @@ _start:
 
     ; here is r8 a prime bit
     ; and r9 is the prime number itself
-    mov r9,r8
-    shl r9,1
-    add r9,3
+    shl r8,1
+    add r8,3
 
     mov rcx, endmem
-    sub rcx, nonprim
+    sub rcx, r10
     sub rcx,1
     inner_loop:
-        add rax, r9
+        add rax, r8
         mov rbx, rax
         shr rbx, 3
         and rbx, -8
@@ -116,5 +114,5 @@ _start:
     mov rbx, 0
     mov rax, SYS_EXIT
     int 80h
-    end _start
+    end main
 
