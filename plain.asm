@@ -1,5 +1,4 @@
 
-
 .X64
 .xmm
 
@@ -7,48 +6,46 @@ include write.inc
 stdout    equ 1
 SYS_EXIT  equ 1
 SYS_WRITE equ 4
+SYS_BRK   equ 12   ; 45 for int80
+pot2      equ 25
 
 
-    .data
-fmthex db 10, "%x "
+.data
 nonprim dq 0
 endmem dq 0
 tmp dq 0
-st_chk db 10,'c'
-st_prm db ' p'
 
-sttest db 10, "., anybody?0", 10
-stlen dd $ - sttest
 outbuf   dq 1024 DUP(0)
 
- .data?
+.data?
 bits     dq 128 DUP(?)
 
-    .code
+.code
 
-    breakme proc
-    ret
-    breakme endp
+breakme proc
+ret
+breakme endp
 
 _start:
 
     ; alloc mem
-    mov rax, 45
-    mov rbx, 0
-    int 80h
+    mov rax, SYS_BRK
+    mov rdi, 0
+    syscall
 
     mov nonprim, rax
 
-    mov rbx, 1
-    shl rbx, 27
-    add rbx, rax
+    mov rdi, 1
+    shl rdi, pot2 - 3
+    add rdi, rax
+    ; add rdi, 16
 
     add r8, r9
 
     mov tmp, rbx
 
-    mov rax, 45
-    int 80h
+    mov rax, SYS_BRK
+    syscall
     mov endmem, rax
 
 
@@ -71,10 +68,13 @@ _start:
 
     add r10, nonprim
 
+    cmp r10, endmem
+    jge outer_break
     ; extract byte- and bit-number
     bt [r10], ax
     jc outer_loop
 
+    push r10
     push r8
 
     ; here is r8 a prime bit
@@ -91,34 +91,26 @@ _start:
         mov rbx, rax
         shr rbx, 3
         and rbx, -8
-        and rax,63
         add r10, rbx
         sub rcx, rbx
         jc inner_break
+        and rax,63
 
         bts [r10], ax
     jmp inner_loop
 
     inner_break:
-    call write
 
     pop r8
-    cmp r8, 10
+    pop r10
+
+    cmp r10, endmem
     jl outer_loop
 
-    ; call write 
+    outer_break:
 
-    ; mov rax, nonprim
-    ; mov [rax], r8
-    ; mov [rax+1], r9
-    ; mov [rax+2], r10
+    call write 
 
-    ; call write 
-    ; call write 
-
-    jmp end_prog
-
-    call write
     end_prog:
 
     mov rbx, 0
