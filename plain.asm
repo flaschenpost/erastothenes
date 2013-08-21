@@ -5,7 +5,7 @@
 
 include write.inc
 stdout    equ 1
-SYS_EXIT  equ 1
+SYS_EXIT  equ 60
 SYS_WRITE equ 4
 SYS_BRK   equ 12
 POT2      equ 29
@@ -32,6 +32,7 @@ bits     dq 128 DUP(?)
     .code
 
     EXTRN printf:NEAR
+    EXTRN fflush:NEAR
 
     breakme proc
     ret
@@ -49,6 +50,7 @@ main:
     mov rdi, 1
     shl rdi, POT2-3
     add rdi, nonprim
+    add rdi,8
 
     mov rax, SYS_BRK
     syscall
@@ -74,6 +76,7 @@ main:
     outer_loop:
 
     add r8,1
+    call breakme
 
     ; extract byte- and bit-number
     ; r10 = byte number (increment by 8 for 64-bit)
@@ -105,7 +108,9 @@ main:
     shl r9,1
     add r9,3
 
+
     ; output p
+    ;; push r14
     ;; push rbx
     ;; push r10
     ;; push r9
@@ -119,6 +124,7 @@ main:
     ;; pop r9
     ;; pop r10
     ;; pop rbx
+    ;; pop r14
     ; end of output p
 
     ; to first relevant bit - square
@@ -137,7 +143,8 @@ main:
     shr rax, 3
     and rax, -8
     and rbx,63
-    add r10, rax
+    mov r10, rax
+    add r10, nonprim
 
     mov rcx, endmem
     sub rcx, r10
@@ -167,7 +174,7 @@ main:
 
     outer_break:
 
-    call write 
+    ;; call write 
 
     ; mov rax, nonprim
     ; mov [rax], r8
@@ -180,9 +187,11 @@ main:
     jmp end_prog
 
     end_prog:
+    ;; xor rax, rax
+    ;; call fflush
 
     mov rbx, 0
     mov rax, SYS_EXIT
-    int 80h
+    syscall
     end main
 
