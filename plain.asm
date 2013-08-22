@@ -181,8 +181,7 @@ main:
     ; mov [rax+1], r9
     ; mov [rax+2], r10
 
-    ; call write 
-    ; call write 
+    call write 
 
     jmp end_prog
 

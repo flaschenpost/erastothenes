@@ -55,17 +55,17 @@ write proc
 
     mov byte ptr [r15], 10
 
-    mov rcx, offset outbuf
-    mov rdx, 73*10+1
-    mov rbx, 1
-    mov rax, 4
-    int 80h
+    ;; mov rcx, offset outbuf
+    ;; mov rdx, 73*10+1
+    ;; mov rbx, 1
+    ;; mov rax, 4
+    ;; int 80h
 
-    ; mov rax, 1
-    ; mov rdi, 1
-    ; mov rsi, offset outbuf
-    ; mov rdx, 70*10
-    ; syscall
+    mov rax, 1
+    mov rdi, 1
+    mov rsi, offset outbuf
+    mov rdx, 70*10+1
+    syscall
 
     
     pop rcx
