@@ -1,31 +1,33 @@
 
-
 .X64
 .xmm
 
 include write.inc
 STDOUT    equ 1
 SYS_EXIT  equ 60
-SYS_WRITE equ 1
+SYS_WRITE equ 4
 SYS_BRK   equ 12
-; output - lines, see write.inc
-LINES equ 10
-
-POT2      equ 25
+POT2      equ 28
+LINES     equ 30
 
 
     .data
+fmthex db 10, "hello %x ", 10, 0
+
 fmtprim db "% 5d %09d ",10, 0
 
-; main pointer, also used by write.inc
 nonprim dq 0
-; end of memory
 endmem dq 0
+tmp dq 0
+st_chk db 10,'c'
+st_prm db ' p'
 
-; buffer for output
-outbuf   dq LINES*76 DUP(0)
+sttest db 10, "., anybody?0", 10
+stlen dd $ - sttest
+outbuf   dq 1024 DUP(0)
 
  .data?
+bits     dq 128 DUP(?)
 
     .code
 
@@ -133,6 +135,9 @@ main:
     sub rax,1
     mov rbx, rax
 
+    ; to first relevant bit - simple
+    ;; add rbx, r9
+    ;; mov rax, rbx
 
     ; split starting bit
     shr rax, 3

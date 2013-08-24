@@ -13,7 +13,7 @@ write proc
     mov r15, offset outbuf
     
     ; just a few lines
-    mov rcx, 10
+    mov rcx, LINES
 
     lineloop:
     push rcx
@@ -55,16 +55,10 @@ write proc
 
     mov byte ptr [r15], 10
 
-    ;; mov rcx, offset outbuf
-    ;; mov rdx, 73*10+1
-    ;; mov rbx, 1
-    ;; mov rax, 4
-    ;; int 80h
-
-    mov rax, 1
-    mov rdi, 1
+    mov rax, SYS_WRITE
+    mov rdi, STDOUT
     mov rsi, offset outbuf
-    mov rdx, 70*10+1
+    mov rdx, 73*LINES
     syscall
 
     
