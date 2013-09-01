@@ -2,44 +2,50 @@
 .X64
 .xmm
 
+
+;; marking bitwise numbers as "Composed"
+;; every bit is an uneven number, so bit 0 stands for Number 3, bit 1 for Number 5 etc.
+;; number = 2*bit + 3
+;; bit = number/2 - 1
+
+;; simple bit-printer
 include write.inc
+
+;; syscall 64-bit linux
 STDOUT    equ 1
 SYS_EXIT  equ 60
 SYS_WRITE equ 4
 SYS_BRK   equ 12
+; output - lines, see write.inc
+LINES equ 10
+; scan & mark  2^POT2 bits
 POT2      equ 29
-LINES     equ 30
-
 
     .data
-fmthex db 10, "hello %x ", 10, 0
-
+;; output format: n-th prime is number ...
 fmtprim db "% 5d %09d ",10, 0
 
+; main memory pointer, also used by write.inc
 nonprim dq 0
+; end of memory
 endmem dq 0
-tmp dq 0
-st_chk db 10,'c'
-st_prm db ' p'
 
-sttest db 10, "., anybody?0", 10
-stlen dd $ - sttest
-outbuf   dq 1024 DUP(0)
+; buffer for output
+outbuf   dq LINES*76 DUP(0)
 
- .data?
-bits     dq 128 DUP(?)
+.code
 
-    .code
+EXTRN printf:NEAR
+EXTRN fflush:NEAR
 
-    EXTRN printf:NEAR
-    EXTRN fflush:NEAR
+;; dirty hack to set breakpoint in gdb, int 3 is too heavy
+breakme proc
+ret
+breakme endp
 
-    breakme proc
-    ret
-    breakme endp
-
+;; print out two values with format fmt, 
 xprint macro fmt, num1, num2
-    ; output p
+    ; not sure which registers are destroyed in printf
     push r14
     push rbx
     push r10
@@ -47,8 +53,8 @@ xprint macro fmt, num1, num2
     push r8
     xor rax,rax
     mov rdi, offset fmt
-    mov rdx, num1
-    mov rsi, num2
+    mov rsi, num1
+    mov rdx, num2
     call printf
     pop r8
     pop r9
@@ -63,33 +69,6 @@ injump macro
     mov rax, r11
     add rbx, r9
 
-    endm
-
-endjump macro
-    bts [r10], bx
-    mov rax, r11
-    add rbx, r9
-    sub r12, 1
-
-    jnz no_over
-
-    and rbx,63
-    add rax, 8
-    push rax
-    mov rax, 63
-    sub rax, rbx
-    xor rdx,rdx
-    div r9
-    add rax,1
-    mov r12, rax
-    pop rax
-
-    no_over:
-
-
-    add r10, rax
-    sub rcx, rax
-    jc inner_break
     endm
 
 
@@ -184,10 +163,6 @@ main:
     sub rax,1
     mov rbx, rax
 
-    ; to first relevant bit - simple
-    ;; add rbx, r9
-    ;; mov rax, rbx
-
     ; split starting bit
     shr rax, 3
     and rax, -8
@@ -207,6 +182,12 @@ main:
     and r9,63
     jz inner_loopz
 
+    ; how many medium-steps should we go?
+
+    middle_loop:
+
+    ; r12 = number of jumps without overflow of bit position
+    ; = (63 - current bit pos)/Bitjump
     mov rax, 63
     sub rax, rbx
     xor rdx, rdx
@@ -214,9 +195,16 @@ main:
     add rax,1
     mov r12, rax
 
+    mul rax, r11
+    cmp rax, rcx
+    jg no_limit
 
-    int 3
+    mov rax, rcx
+    xor rdx,rdx
+    div r11
+    mov r12, rax
 
+    no_limit:
     mov rax, 63
     sub rax, r12
     mul r13
@@ -230,28 +218,19 @@ main:
     repeat 63 
     injump
     endm
-    int 3
 
+    sub rcx, r12
+
+    jc inner_break
 
     and rbx,63
-    add rax, 8
-    push rax
-    mov rax, 63
-    sub rax, rbx
-    xor rdx,rdx
-    div r9
-    add rax,1
-    mov r12, rax
-    pop rax
+    add r10, 8
 
-    jmp inner_break
+    sub rcx, 1
 
-    inner_loopz:
-    bts [r10], bx
-    add r10, r11
-    sub r10, r11
     jc inner_break
-    jmp inner_loopz
+
+    jmp middle_loop
 
     inner_break:
 
