@@ -180,11 +180,14 @@ main:
     and r11,-8
 
     and r9,63
-    jz inner_loopz
+    jnz middle_loop
+
+    int 3
 
     ; how many medium-steps should we go?
 
     middle_loop:
+    call breakme
 
     ; r12 = number of jumps without overflow of bit position
     ; = (63 - current bit pos)/Bitjump
@@ -195,7 +198,9 @@ main:
     add rax,1
     mov r12, rax
 
-    mul rax, r11
+    mul r11
+    cmp rax, 0
+    jz no_limit
     cmp rax, rcx
     jg no_limit
 
