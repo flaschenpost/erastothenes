@@ -7,7 +7,7 @@ STDOUT    equ 1
 SYS_EXIT  equ 60
 SYS_WRITE equ 4
 SYS_BRK   equ 12
-POT2      equ 28
+POT2      equ 29
 LINES     equ 30
 
 
@@ -38,8 +38,63 @@ bits     dq 128 DUP(?)
     ret
     breakme endp
 
-main:
+xprint macro fmt, num1, num2
+    ; output p
+    push r14
+    push rbx
+    push r10
+    push r9
+    push r8
+    xor rax,rax
+    mov rdi, offset fmt
+    mov rdx, num1
+    mov rsi, num2
+    call printf
+    pop r8
+    pop r9
+    pop r10
+    pop rbx
+    pop r14
+    endm
+    ; end of output p
 
+injump macro 
+    bts [r10], bx
+    mov rax, r11
+    add rbx, r9
+
+    endm
+
+endjump macro
+    bts [r10], bx
+    mov rax, r11
+    add rbx, r9
+    sub r12, 1
+
+    jnz no_over
+
+    and rbx,63
+    add rax, 8
+    push rax
+    mov rax, 63
+    sub rax, rbx
+    xor rdx,rdx
+    div r9
+    add rax,1
+    mov r12, rax
+    pop rax
+
+    no_over:
+
+
+    add r10, rax
+    sub rcx, rax
+    jc inner_break
+    endm
+
+
+
+main:
     ; alloc mem
     mov rax, SYS_BRK
     xor rdi, rdi
@@ -57,6 +112,15 @@ main:
     sub rax, 8
     mov endmem, rax
 
+    jmp postcommand
+
+    precommand:
+    injump
+    postcommand:
+
+    mov r13, offset postcommand
+    mov rax, offset precommand
+    sub r13, rax
 
     ; the counter for the number of prime
     xor r14, r14
@@ -76,7 +140,6 @@ main:
     outer_loop:
 
     add r8,1
-    call breakme
 
     ; extract byte- and bit-number
     ; r10 = byte number (increment by 8 for 64-bit)
@@ -110,21 +173,7 @@ main:
 
 
     ; output p
-    ;; push r14
-    ;; push rbx
-    ;; push r10
-    ;; push r9
-    ;; push r8
-    ;; xor rax,rax
-    ;; mov rdi, offset fmtprim
-    ;; mov rdx, r9
-    ;; mov rsi, r14
-    ;; call printf
-    ;; pop r8
-    ;; pop r9
-    ;; pop r10
-    ;; pop rbx
-    ;; pop r14
+    ;; xprint fmtprim, r9, r14
     ; end of output p
 
     ; to first relevant bit - square
@@ -151,23 +200,60 @@ main:
     jc inner_break
     jz inner_break
 
-    sub rcx,1
+    mov r11, r9
+    shr r11,3
+    and r11,-8
+
+    and r9,63
+    jz inner_loopz
+
+    mov rax, 63
+    sub rax, rbx
+    xor rdx, rdx
+    div r9
+    add rax,1
+    mov r12, rax
+
+
+    int 3
+
+    mov rax, 63
+    sub rax, r12
+    mul r13
+
+    mov rdx, inner_loop
+    add rax, rdx
+    jmp rax
+
+
     inner_loop:
-        bts [r10], bx
+    repeat 63 
+    injump
+    endm
+    int 3
 
-        add rbx, r9
-        mov rax, rbx
-        shr rax, 3
-        and rax, -8
-        and rbx,63
-        add r10, rax
-        sub rcx, rax
-        jc inner_break
 
-    jmp inner_loop
+    and rbx,63
+    add rax, 8
+    push rax
+    mov rax, 63
+    sub rax, rbx
+    xor rdx,rdx
+    div r9
+    add rax,1
+    mov r12, rax
+    pop rax
+
+    jmp inner_break
+
+    inner_loopz:
+    bts [r10], bx
+    add r10, r11
+    sub r10, r11
+    jc inner_break
+    jmp inner_loopz
 
     inner_break:
-    ;; call write
 
     pop r8
     jmp outer_loop
