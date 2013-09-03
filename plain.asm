@@ -19,7 +19,7 @@ SYS_BRK   equ 12
 ; output - lines, see write.inc
 LINES equ 10
 ; scan & mark  2^POT2 bits
-POT2      equ 29
+POT2      equ 18
 
     .data
 ;; output format: n-th prime is number ...
@@ -89,7 +89,7 @@ main:
     add r14,1
     
     ; prime number 2 is first
-    ;; xprint fmtprim, r14, 2 
+    xprint fmtprim, r14, 2 
 
 
     ;; r8 is the bit-position
@@ -136,7 +136,7 @@ main:
 
 
     ; output p - disable for timing, enable for checking
-    ; xprint fmtprim, r14, r9
+    xprint fmtprim, r14, r9
 
     ; to first relevant bit - square and recalc; if p = 7, the composite 5*7 has been already marked during p=5
     ; so we can start at 7*7

@@ -19,7 +19,7 @@ SYS_BRK   equ 12
 ; output - lines, see write.inc
 LINES equ 10
 ; scan & mark  2^POT2 bits
-POT2      equ 29
+POT2      equ 20
 
     .data
 ;; output format: n-th prime is number ...
@@ -48,23 +48,58 @@ xprint macro fmt, num1, num2
     ; not sure which registers are destroyed in printf
     push r14
     push rbx
+    push rcx
+    push r13
+    push r12
+    push r11
     push r10
     push r9
     push r8
+    push rax
+    push rdi
+    push rsi
     xor rax,rax
     mov rdi, offset fmt
     mov rsi, num1
     mov rdx, num2
     call printf
+    pop rsi
+    pop rdi
+    pop rax
     pop r8
     pop r9
     pop r10
+    pop r11
+    pop r12
+    pop r13
+    pop rcx
     pop rbx
     pop r14
     endm
     ; end of output p
 
 injump macro 
+; debug output
+    push rax
+    push r13
+    push r14
+
+    mov rax, r10
+    sub rax, nonprim
+    mov r14, 64
+    mul r14
+    add rax,3
+    mov r13, rax
+    mov r14, rax
+    shl r14, 1
+    add r14, 3
+    xprint fmtprim, r13, r14
+    
+    pop r14
+    pop r13
+    pop rax
+    ; end debug
+    
     bts [r10], bx
     mov rax, r11
     add rbx, r9
@@ -152,8 +187,9 @@ main:
 
 
     ; output p
-    ;; xprint fmtprim, r9, r14
+    xprint fmtprim, r14, r9
     ; end of output p
+    call breakme
 
     ; to first relevant bit - square
     mov rax, r9
@@ -187,7 +223,7 @@ main:
     ; how many medium-steps should we go?
 
     middle_loop:
-    call breakme
+    ;; call breakme
 
     ; r12 = number of jumps without overflow of bit position
     ; = (63 - current bit pos)/Bitjump
@@ -198,11 +234,15 @@ main:
     add rax,1
     mov r12, rax
 
-    mul r11
-    cmp rax, 0
+    cmp r11, 0
     jz no_limit
-    cmp rax, rcx
+
+    ; do not execute the full block
+    mul r11
+    cmp rcx, rax
     jg no_limit
+
+    call breakme
 
     mov rax, rcx
     xor rdx,rdx
@@ -224,20 +264,26 @@ main:
     injump
     endm
 
-    sub rcx, r12
+    call breakme
+    mov rax, r12
+    sub rax,1
+    mul r11
+    add rax, 8
+    sub rcx, rax
 
     jc inner_break
+    jz inner_break
 
     and rbx,63
     add r10, 8
-
-    sub rcx, 1
 
     jc inner_break
 
     jmp middle_loop
 
     inner_break:
+
+    ;; call breakme
 
     pop r8
     jmp outer_loop
